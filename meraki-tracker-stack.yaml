@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Meraki Real-time Location Tracking CloudFormation Template
+
+Parameters:
+  DBName:
+    Description: PostgreSQL database name
+    Type: String
+    Default: merakitrackerdb
+
+  DBUsername:
+    Description: PostgreSQL database username
+    Type: String
+    Default: merakiuser
+
+  DBPassword:
+    Description: PostgreSQL database password
+    Type: String
+    NoEcho: true
+
+  S3BucketName:
+    Description: Name of the S3 bucket for storing static assets
+    Type: String
+
+Resources:
+  MerakiTrackerDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: '13.3'
+      AllocatedStorage: 20
+      DBInstanceClass: db.t2.micro
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBName: !Ref DBName
+      VPCSecurityGroups:
+        - !Ref MerakiTrackerDBSecurityGroup
+      BackupRetentionPeriod: 7
+      DeletionProtection: true
+
+  MerakiTrackerDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable PostgreSQL access for Meraki Real-time Location Tracking
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 0.0.0.0/0
+
+  MerakiTrackerS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3BucketName
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
